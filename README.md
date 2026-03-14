@@ -2,7 +2,7 @@
 
 This project implements the Design Structure Matrix (DSM) partitioning problem for the CPSC482/682 Data Structures II term project. We store sparse DSMs in compressed sparse column (CSC) format and use Kosaraju’s and Tarjan’s algorithms to find strongly connected components (SCCs) and build a task ordering.
 
-We use Java with Maven. The main code lives under the `CPSC482Team.DSM` package. We can either run a fixed 10×10 example through a JUnit test or run the same pipeline on any Matrix Market file from the `TestData` folder via the main application.
+We use Java with Maven. The main code lives under the `CPSC482Team.DSM` package.
 
 ---
 
@@ -16,9 +16,6 @@ We use Java with Maven. The main code lives under the `CPSC482Team.DSM` package.
 
 - **`CSCBuilder.java`**  
   Builds a `DSMMatrix` from arrays of nonzero `(row, col)` positions.
-
-- **`TestMatrices.java`**  
-  Provides a fixed 10×10 DSM (`example10x10()`) for testing.
 
 - **`KosarajuSCC.java`**  
   Runs Kosaraju’s algorithm on a `DSMMatrix` and returns a permutation array `perm[]` giving the new task order (with a simple intra-SCC heuristic).
@@ -34,32 +31,15 @@ We use Java with Maven. The main code lives under the `CPSC482Team.DSM` package.
 - **`MatrixMarketReader.java`**  
   Reads a square DSM from a Matrix Market coordinate file (e.g. files in the `TestData` folder) and returns a `DSMMatrix`.
 
-- **`AppTest.java`**  
-  JUnit test that:
-  - Builds the 10×10 DSM.  
-  - Prints the original matrix.  
-  - Computes and prints original FBM/TFBD.  
-  - Runs Kosaraju + permutation and prints the runtime and FBM/TFBD.  
-  - Runs Tarjan + permutation and prints the runtime and FBM/TFBD.  
-  - Prints the permuted matrices and checks that all FBM and TFBD values are non-negative.
-
 ---
 
-## How to build and run the test
+## How to run the test
 
 From the project root (where `pom.xml` is):
 
 ```bash
 mvn test
 ```
-
-This compiles the code and runs `AppTest`. During the test you will see:
-
-- The original 10×10 DSM printed as 0/1 entries.
-- The runtime for the Kosaraju + permutation step on the 10×10 matrix.
-- The permuted 10×10 DSM printed as 0/1 entries.
-
-If everything is working, Maven finishes with `BUILD SUCCESS`.
 
 ---
 
