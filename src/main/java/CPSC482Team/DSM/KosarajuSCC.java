@@ -5,12 +5,10 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-/**
- * In this class we implement Kosaraju's algorithm on top of our CSC
- * representation of the DSM. Our goal is to compute a permutation of
- * the tasks that groups strongly connected components into blocks and
- * then orders those blocks in a topological order.
- */
+// In this class we implement Kosaraju's algorithm on top of our CSC
+// representation of the DSM. Our goal is to compute a permutation of
+// the tasks that groups strongly connected components into blocks and
+// then orders those blocks in a topological order.
 public final class KosarajuSCC {
 
     private KosarajuSCC() {
@@ -18,19 +16,17 @@ public final class KosarajuSCC {
         // want anyone to create an instance of it.
     }
 
-    /**
-     * We use this method to run the full Kosaraju pipeline:
-     *   1) we run a depth-first search on the original graph to get a
-     *      finish-time order of vertices,
-     *   2) we build the transpose and run another depth-first search in
-     *      that order to identify strongly connected components,
-     *   3) we build a DAG of components and topologically order them,
-     *   4) we assemble a permutation that lists vertices by component
-     *      order.
-     *
-     * The returned array perm satisfies: perm[k] is the original vertex
-     * index we place in row and column k of the reordered matrix.
-     */
+    // We use this method to run the full Kosaraju pipeline:
+    //   1) we run a depth-first search on the original graph to get a
+    //      finish-time order of vertices,
+    //   2) we build the transpose and run another depth-first search in
+    //      that order to identify strongly connected components,
+    //   3) we build a DAG of components and topologically order them,
+    //   4) we assemble a permutation that lists vertices by component
+    //      order.
+    //
+    // The returned array perm satisfies: perm[k] is the original vertex
+    // index we place in row and column k of the reordered matrix.
     public static int[] computePermutation(DSMMatrix g) {
         int n = g.n;
 
@@ -52,8 +48,10 @@ public final class KosarajuSCC {
         int[] compOrder = topologicalOrderOfComponentDag(g, componentOf, components.size());
 
         // Finally we build the permutation by walking through components
-        // in topological order and listing the vertices within each one.
-        return buildPermutationFromComponents(components, compOrder);
+        // in topological order. Inside each component we apply a simple
+        // degree-based heuristic to try to reduce FBM and TFBD without
+        // adding much overhead.
+        return buildPermutationFromComponents(g, components, compOrder);
     }
 
     private static int[] firstPassFinishOrder(DSMMatrix g) {
@@ -176,7 +174,7 @@ public final class KosarajuSCC {
         return groups;
     }
 
-    private static int[] topologicalOrderOfComponentDag(DSMMatrix g,
+    static int[] topologicalOrderOfComponentDag(DSMMatrix g,
         int[] componentOf,
         int compCount) {
         List<List<Integer>> adj = new ArrayList<>(compCount);
@@ -228,8 +226,9 @@ public final class KosarajuSCC {
         stack.push(c);
     }
 
-    private static int[] buildPermutationFromComponents(List<List<Integer>> components,
-                                                        int[] compOrder) {
+    static int[] buildPermutationFromComponents(DSMMatrix g,
+                                                List<List<Integer>> components,
+                                                int[] compOrder) {
         int totalVertices = 0;
         for (List<Integer> comp : components) {
             totalVertices += comp.size();
@@ -240,13 +239,89 @@ public final class KosarajuSCC {
 
         for (int compId : compOrder) {
             List<Integer> comp = components.get(compId);
-            for (int v : comp) {
+
+            // Here we optionally reorder vertices inside this component
+            // using a small degree-based heuristic that looks only at
+            // edges within the component.
+            List<Integer> ordered = orderVerticesWithinComponent(g, comp);
+
+            for (int v : ordered) {
                 perm[idx] = v;
                 idx += 1;
             }
         }
 
         return perm;
+    }
+
+    // We use this helper to choose an order of vertices inside a single
+    // strongly connected component. Our goal is to move vertices that
+    // behave more like "sources" earlier and "sinks" later, based on
+    // in-degree and out-degree restricted to this component.
+    //
+    // For very small components we simply keep the original order.
+    private static List<Integer> orderVerticesWithinComponent(DSMMatrix g,
+                                                              List<Integer> comp) {
+        int size = comp.size();
+
+        // For tiny components there is not much to gain, so we keep
+        // the original order.
+        if (size <= 2) {
+            return comp;
+        }
+
+        // We build a mapping from vertex id to its index in the
+        // component list so that we can quickly test membership.
+        int[] indexInComp = new int[g.n];
+        for (int i = 0; i < size; i++) {
+            int v = comp.get(i);
+            indexInComp[v] = i + 1; // store i+1 so 0 means "not in comp"
+        }
+
+        int[] inDeg = new int[size];
+        int[] outDeg = new int[size];
+
+        // We walk over all vertices in this component and count only
+        // edges that stay inside the component.
+        for (int i = 0; i < size; i++) {
+            int v = comp.get(i);
+            for (int p = g.colPtr[v]; p < g.colPtr[v + 1]; p++) {
+                int u = g.rowInd[p];
+                int j = indexInComp[u] - 1;
+                if (j >= 0) {
+                    outDeg[i] += 1;
+                    inDeg[j] += 1;
+                }
+            }
+        }
+
+        // Now we sort a copy of the component vertices according to a
+        // simple rule: lower in-degree first, and for ties higher
+        // out-degree first. This tends to place "sources" before
+        // "sinks" inside the component.
+        List<Integer> ordered = new ArrayList<>(comp);
+        ordered.sort((a, b) -> {
+            int ia = indexInComp[a] - 1;
+            int ib = indexInComp[b] - 1;
+
+            int inA = inDeg[ia];
+            int inB = inDeg[ib];
+            if (inA != inB) {
+                return Integer.compare(inA, inB);
+            }
+
+            int outA = outDeg[ia];
+            int outB = outDeg[ib];
+            if (outA != outB) {
+                return Integer.compare(outB, outA);
+            }
+
+            // As a final tie-breaker we use the vertex id to keep the
+            // ordering deterministic.
+            return Integer.compare(a, b);
+        });
+
+        return ordered;
     }
 }
 

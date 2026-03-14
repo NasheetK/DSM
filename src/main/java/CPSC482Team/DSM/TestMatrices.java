@@ -1,10 +1,8 @@
 package CPSC482Team.DSM;
 
-/**
- * In this class we collect small fixed DSM examples that we can plug
- * into our tests. Having at least one 10x10 matrix helps us exercise
- * the full algorithm pipeline without depending on external data files.
- */
+// In this class we collect small fixed DSM examples that we can plug
+// into our tests. Having at least one 10x10 matrix helps us exercise
+// the full algorithm pipeline without depending on external data files.
 public final class TestMatrices {
 
     private TestMatrices() {
@@ -12,14 +10,12 @@ public final class TestMatrices {
         // meant to host static factory methods for test matrices.
     }
 
-    /**
-     * We construct a hand-crafted 10x10 DSM here. We keep the structure
-     * small but non-trivial so that the SCC algorithms see both cycles
-     * and simple chains, while still being easy for us to reason about
-     * when we inspect test output.
-     *
-     * We treat all indices as zero-based inside the code.
-     */
+    // We construct a hand-crafted 10x10 DSM here. We keep the structure
+    // small but non-trivial so that the SCC algorithms see both cycles
+    // and simple chains, while still being easy for us to reason about
+    // when we inspect test output.
+    //
+    // We treat all indices as zero-based inside the code.
     public static DSMMatrix example10x10() {
         int n = 10;
 
