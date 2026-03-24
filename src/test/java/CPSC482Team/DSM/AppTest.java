@@ -55,13 +55,20 @@ public class AppTest
 
         long endNanos = System.nanoTime();
         double elapsedMillis = (endNanos - startNanos) / 1_000_000.0;
+        
         System.out.println("Kosaraju + permutation runtime on 10x10 DSM: "
                            + elapsedMillis + " ms");
+        
+        int[] feedbackPerm = FBDOptimizer.optimize(permuted);
+        DSMMatrix feedbackOptMatrix = DSMUtils.permute(permuted, feedbackPerm);
 
         // We also print the permuted matrix so that we can see how our
         // ordering changes the structure of the DSM.
         System.out.println("Permuted 10x10 DSM:");
         System.out.println(DSMUtils.toDenseString(permuted));
+        
+        System.out.println("Permuted 10x10 DSM with feedback distance optimized:");
+        System.out.println(DSMUtils.toDenseString(feedbackOptMatrix));
 
         // For now we only verify that the feedback metrics are
         // well-defined and non-negative for this example.
