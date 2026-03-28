@@ -28,23 +28,6 @@ public final class FBDOptimizer
 
         generateLists(g, feedbackDistances, feedforwardDistances);
 
-        
-        // For testing only
-        for (ArrayList<Integer> i : feedbackDistances) {
-            for (Integer j : i) {
-                System.out.printf("%d, ", j);
-            }
-            System.out.println("end of vertex");
-        }
-        System.out.println("------DONE------");
-        
-        for (ArrayList<Integer> i : feedforwardDistances) {
-            for (Integer j : i) {
-                System.out.printf("%d, ", j);
-            }
-            System.out.println("end of vertex");
-        }
-
         int[] result = optimizeLists(n, feedbackDistances, feedforwardDistances);
         return result;
     }
