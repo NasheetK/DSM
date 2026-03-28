@@ -37,7 +37,7 @@ public class App
             // We read the Matrix Market file into our CSC-backed DSMMatrix.
             DSMMatrix dsm = MatrixMarketReader.read(filePath);
             System.out.println("Matrix size: " + dsm.n + " x " + dsm.n);
-            System.out.println("Nonzeros: " + dsm.nnz);
+            System.out.println("Number of nonzeros: " + dsm.nnz);
 
             // First we compute FBM and TFBD for the original ordering
             // so that we can see how much the permutation improves.
@@ -45,35 +45,36 @@ public class App
             System.out.println("Original FBM: " + originalMetrics[0]);
             System.out.println("Original TFBD: " + originalMetrics[1]);
 
-            // We time the Kosaraju + permutation pipeline on this input,
-            // in the same spirit as in our 10x10 test.
-            long startNanosKos = System.nanoTime();
-
-            int[] permKos = KosarajuSCC.computePermutation(dsm);
-            DSMMatrix permutedKos = DSMUtils.permute(dsm, permKos);
-            long[] metricsKos = DSMUtils.computeFeedbackMetrics(permutedKos);
-
-            long endNanosKos = System.nanoTime();
-            double elapsedMillisKos = (endNanosKos - startNanosKos) / 1_000_000.0;
-
-            System.out.println("Kosaraju + permutation runtime: " + elapsedMillisKos + " ms");
-            System.out.println("Kosaraju FBM: " + metricsKos[0]);
-            System.out.println("Kosaraju TFBD: " + metricsKos[1]);
-
-            // We also run Tarjan's algorithm on the same DSM so that we
-            // can compare runtimes and metrics for this input.
-            long startNanosTarjan = System.nanoTime();
+            // We run Tarjan's algorithm on the DSM so that we
+            // generate a matrix that has the number of feedback depenencies as 
+            // few as possible.
+            long startNanosFewAbove = System.nanoTime();
 
             int[] permTarjan = TarjanSCC.computePermutation(dsm);
             DSMMatrix permutedTarjan = DSMUtils.permute(dsm, permTarjan);
-            long[] metricsTarjan = DSMUtils.computeFeedbackMetrics(permutedTarjan);
+            long[] metricsFewAbove = DSMUtils.computeFeedbackMetrics(permutedTarjan);
 
-            long endNanosTarjan = System.nanoTime();
-            double elapsedMillisTarjan = (endNanosTarjan - startNanosTarjan) / 1_000_000.0;
+            long endNanosFewAbove = System.nanoTime();
+            double elapsedMillisFewAbove = (endNanosFewAbove - startNanosFewAbove) / 1_000_000.0;
 
-            System.out.println("Tarjan + permutation runtime: " + elapsedMillisTarjan + " ms");
-            System.out.println("Tarjan FBM: " + metricsTarjan[0]);
-            System.out.println("Tarjan TFBD: " + metricsTarjan[1]);
+            System.out.println("Minimum feedback dependencies above + permutation runtime: " + elapsedMillisFewAbove + " ms");
+            System.out.println("#FBM for Minimum feedback dependencies above: " + metricsFewAbove[0]);
+            System.out.println("Total FBD for Minimum feedback dependencies above: " + metricsFewAbove[1]);
+
+            // Next, we permute the DSM so that the average distance from the diagonal
+            // is minimized. This is done with a greedy algorithm.
+            long startNanosClosest = System.nanoTime();
+
+            int[] closestPerm = FBDOptimizer.optimize(permutedTarjan);
+            DSMMatrix closest = DSMUtils.permute(permutedTarjan, closestPerm);
+            long[] metricsClosest = DSMUtils.computeFeedbackMetrics(closest);
+
+            long endNanosClosest = System.nanoTime();
+            double elapsedMillisClosest = (endNanosClosest - startNanosClosest) / 1_000_000.0;
+            
+            System.out.println("Minimum feedback distance from diagonal + permutation runtime: " + elapsedMillisClosest + " ms");
+            System.out.println("#FBM for miniumum feedback distance from diagonal: " + metricsClosest[0]);
+            System.out.println("Total FBD for miniumum feedback distance for diagonal: " + metricsClosest[1]);
 
         } catch (Exception ex) {
             System.out.println("Error while processing DSM file: " + ex.getMessage());
