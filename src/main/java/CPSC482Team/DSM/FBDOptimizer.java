@@ -63,16 +63,24 @@ public final class FBDOptimizer
             int currentFBColumn = currentVertex;
 
             // Go through both lists and run main part of the algorithm
-            while (fFDIndex < currentFFDistances.size() && fBDIndex < currentFBDistances.size()) {
+            while (fFDIndex < (currentFFDistances.size() - 1) || fBDIndex < (currentFBDistances.size() - 1)) {
                 // Get largest distances
-                // names is short for largest feed forward distance and largest feed back distance respectively
-                
-                assert((currentFFDistances.size() - 1 - fFDIndex) < (currentFFDistances.size()));
-                assert((currentFFDistances.size() - 1 - fFDIndex) >= 0);
+                // largestFFD and largestFBD is short for largest feed forward distance and largest feed back distance respectively
+                assert((currentFFDistances.size() - fFDIndex) <= (currentFFDistances.size()));
+                assert((currentFFDistances.size() - fFDIndex) >= 0);
                 assert(fBDIndex >= 0);
-                assert(fBDIndex < currentFBDistances.size());
+                assert(fBDIndex <= currentFBDistances.size());
 
-                int largestFFD = currentFFDistances.get(currentFFDistances.size() - 1 - fFDIndex);
+                // The following if statements handle the current distances lists being empty
+                int largestFFD = 0;
+                if (currentFFDistances.size() != 0) {
+                    largestFFD = currentFFDistances.get(currentFFDistances.size() - 1 - fFDIndex);
+                }
+
+                // If there are no feedback distances on the current row, then exit
+                if (currentFBDistances.size() == 0) {
+                    break;
+                }
                 int largestFBD = currentFBDistances.get(fBDIndex);
 
                 if (largestFBD > largestFFD) {
@@ -80,11 +88,9 @@ public final class FBDOptimizer
                     currentFFColumn -= largestFFD;
                     currentFBColumn += largestFBD;
                     break;
-                }
-                else if (largestFBD <= largestFFD && (currentFBDistances.size() - 1) < fBDIndex) {
+                } else if (largestFBD <= largestFFD && (currentFBDistances.size() - 1) > fBDIndex) {
                     fBDIndex++;
-                }
-                else if (largestFBD <= largestFFD && (currentFBDistances.size() - 1) == fBDIndex) {
+                } else if (largestFBD <= largestFFD && (currentFBDistances.size() - 1) == fBDIndex) {
                     fFDIndex++;
                 }
             }

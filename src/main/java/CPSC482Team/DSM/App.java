@@ -45,21 +45,36 @@ public class App
             System.out.println("Original FBM: " + originalMetrics[0]);
             System.out.println("Original TFBD: " + originalMetrics[1]);
 
-            // We run Tarjan's algorithm on the DSM so that we
-            // generate a matrix that has the number of feedback depenencies as 
-            // few as possible.
-            long startNanosFewAbove = System.nanoTime();
+
+                        long startNanosKos = System.nanoTime();
+
+            int[] permKos = KosarajuSCC.computePermutation(dsm);
+            DSMMatrix permutedKos = DSMUtils.permute(dsm, permKos);
+            long[] metricsKos = DSMUtils.computeFeedbackMetrics(permutedKos);
+
+            long endNanosKos = System.nanoTime();
+            double elapsedMillisKos = (endNanosKos - startNanosKos) / 1_000_000.0;
+
+            System.out.println();
+            System.out.println("Kosaraju + permutation runtime: " + elapsedMillisKos + " ms");
+            System.out.println("Kosaraju FBM: " + metricsKos[0]);
+            System.out.println("Kosaraju TFBD: " + metricsKos[1]);
+
+            // We also run Tarjan's algorithm on the same DSM so that we
+            // can compare runtimes and metrics for this input.
+            long startNanosTarjan = System.nanoTime();
 
             int[] permTarjan = TarjanSCC.computePermutation(dsm);
             DSMMatrix permutedTarjan = DSMUtils.permute(dsm, permTarjan);
-            long[] metricsFewAbove = DSMUtils.computeFeedbackMetrics(permutedTarjan);
+            long[] metricsTarjan = DSMUtils.computeFeedbackMetrics(permutedTarjan);
 
-            long endNanosFewAbove = System.nanoTime();
-            double elapsedMillisFewAbove = (endNanosFewAbove - startNanosFewAbove) / 1_000_000.0;
+            long endNanosTarjan = System.nanoTime();
+            double elapsedMillisTarjan = (endNanosTarjan - startNanosTarjan) / 1_000_000.0;
 
-            System.out.println("Minimum feedback dependencies above + permutation runtime: " + elapsedMillisFewAbove + " ms");
-            System.out.println("#FBM for Minimum feedback dependencies above: " + metricsFewAbove[0]);
-            System.out.println("Total FBD for Minimum feedback dependencies above: " + metricsFewAbove[1]);
+            System.out.println();
+            System.out.println("Tarjan + permutation runtime: " + elapsedMillisTarjan + " ms");
+            System.out.println("Tarjan FBM: " + metricsTarjan[0]);
+            System.out.println("Tarjan TFBD: " + metricsTarjan[1]);
 
             // Next, we permute the DSM so that the average distance from the diagonal
             // is minimized. This is done with a greedy algorithm.
@@ -71,10 +86,11 @@ public class App
 
             long endNanosClosest = System.nanoTime();
             double elapsedMillisClosest = (endNanosClosest - startNanosClosest) / 1_000_000.0;
-            
-            System.out.println("Minimum feedback distance from diagonal + permutation runtime: " + elapsedMillisClosest + " ms");
-            System.out.println("#FBM for miniumum feedback distance from diagonal: " + metricsClosest[0]);
-            System.out.println("Total FBD for miniumum feedback distance for diagonal: " + metricsClosest[1]);
+
+            System.out.println();
+            System.out.println("Minimum feedback distance from diagonal + permutation runtime: " + elapsedMillisKos + " ms");
+            System.out.println("Minimum feedback distance from diagonal FBM: " + metricsKos[0]);
+            System.out.println("Minimum feedback distance from diagonal TFBD: " + metricsKos[1]);
 
         } catch (Exception ex) {
             System.out.println("Error while processing DSM file: " + ex.getMessage());
