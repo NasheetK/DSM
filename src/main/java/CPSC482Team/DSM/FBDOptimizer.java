@@ -10,6 +10,7 @@ import java.util.ArrayList;
  */
 public final class FBDOptimizer 
 {
+    private FBDOptimizer() {}
     /**
      * Takes a DSM matrix and returns a permutation with the distance of feedback marks from the 
      * diagonal optimized using the greedy algorithm specified in the report.

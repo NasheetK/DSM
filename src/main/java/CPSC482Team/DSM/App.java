@@ -1,6 +1,7 @@
 package CPSC482Team.DSM;
 
 import java.io.File;
+import java.util.Random;
 
 // In this main class we provide a simple command-line interface that
 // lets us point to a Matrix Market file (for example in the TestData
@@ -17,25 +18,54 @@ public class App
     public static void main(String[] args)
     {
         if (args.length < 1) {
-            System.out.println("Usage: java CPSC482Team.DSM.App <path-to-matrix-market-file>");
+            System.out.println("Usage: java CPSC482Team.DSM.App <path-to-matrix-market-file> or java CPSC482Team.DSM.App -g <n> <nnz> <seed>");
             System.out.println("Example (from project root):");
             System.out.println("  mvn exec:java -Dexec.mainClass=CPSC482Team.DSM.App"
                     + " -Dexec.args=\"TestData/EVA.mtx\"");
             return;
         }
 
-        String filePath = args[0];
-        System.out.println("Reading DSM from file: " + filePath);
+        boolean isFromFile = false;
+        String filePath = null;
+        int n = 0, nnz = 0, seed = 0;
+        if (!args[0].equals("-g")) {
+            // Handle matrix from file
+            isFromFile = true;
+            filePath = args[0];
+            System.out.println("Reading DSM from file: " + filePath);
 
-        File f = new File(filePath);
-        if (!f.exists() || !f.isFile()) {
-            System.out.println("The file \"" + filePath + "\" does not exist or is not a regular file.");
-            return;
+            File f = new File(filePath);
+            if (!f.exists() || !f.isFile()) {
+                System.out.println("The file \"" + filePath + "\" does not exist or is not a regular file.");
+                return;
+            }
+        } else {
+            try {
+                n = Integer.parseInt(args[1]);
+                nnz = Integer.parseInt(args[2]);
+                seed = Integer.parseInt(args[3]);
+                if (n <= 0 || nnz <= 0 || seed <= 0 || (long)n*(long)n < (long)(nnz - n)) {
+                    System.out.println("Please provide positive, nonzero integers and make" 
+                        + " sure that you don't have more non-zero elements than possible entries!");
+                    return;
+                }
+            } catch (Exception e) {
+                System.out.println("Please provide positive, nonzero integers!");
+                return;
+            }
         }
 
         try {
             // We read the Matrix Market file into our CSC-backed DSMMatrix.
-            DSMMatrix dsm = MatrixMarketReader.read(filePath);
+            DSMMatrix dsm = null;
+            if (isFromFile) {
+                dsm = MatrixMarketReader.read(filePath);
+            } else {
+                Random rnd = new Random(seed);
+                MatrixGenerator generator = new MatrixGenerator(rnd);
+                dsm = generator.generate(n, nnz);
+            }
+            
             System.out.println("Matrix size: " + dsm.n + " x " + dsm.n);
             System.out.println("Number of nonzeros: " + dsm.nnz);
 
