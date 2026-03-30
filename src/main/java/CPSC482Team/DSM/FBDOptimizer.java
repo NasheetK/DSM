@@ -98,6 +98,11 @@ public final class FBDOptimizer
                         break;
                     }
 
+                    // Handle any marks crossing the diagonal
+                    if (highestMarks[potentialCFFColumn] > potentialCFFColumn) {
+                        break;
+                    }
+
                     // Adjust distances as needed
                     currentFFColumn = potentialCFFColumn;
                     currentFBColumn = potentialCFBColumn;
