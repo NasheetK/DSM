@@ -46,7 +46,7 @@ public class App
             System.out.println("Original TFBD: " + originalMetrics[1]);
 
 
-                        long startNanosKos = System.nanoTime();
+            long startNanosKos = System.nanoTime();
 
             int[] permKos = KosarajuSCC.computePermutation(dsm);
             DSMMatrix permutedKos = DSMUtils.permute(dsm, permKos);
@@ -88,9 +88,9 @@ public class App
             double elapsedMillisClosest = (endNanosClosest - startNanosClosest) / 1_000_000.0;
 
             System.out.println();
-            System.out.println("Minimum feedback distance from diagonal + permutation runtime: " + elapsedMillisKos + " ms");
-            System.out.println("Minimum feedback distance from diagonal FBM: " + metricsKos[0]);
-            System.out.println("Minimum feedback distance from diagonal TFBD: " + metricsKos[1]);
+            System.out.println("Minimum feedback distance from diagonal + permutation runtime: " + elapsedMillisClosest + " ms");
+            System.out.println("Minimum feedback distance from diagonal: FBM: " + metricsClosest[0]);
+            System.out.println("Minimum feedback distance from diagonal: TFBD: " + metricsClosest[1]);
 
         } catch (Exception ex) {
             System.out.println("Error while processing DSM file: " + ex.getMessage());
